@@ -6,6 +6,7 @@ import { MonitoringObject } from '../../class/monitoring-object';
 
 import { Utils } from '../../utils/utils';
 import { TOOLTIPMESSAGEALERT } from '../../constants/guard';
+import { ListService } from '../../services/list.service';
 
 @Component({
   selector: 'pnx-monitoring-lists',
@@ -45,7 +46,7 @@ export class MonitoringListComponent implements OnInit {
 
   canCreateChild: { [key: string]: boolean } = {};
   toolTipNotAllowed: string = TOOLTIPMESSAGEALERT;
-  constructor(private _configService: ConfigService) {}
+  constructor(private _configService: ConfigService, private _listService: ListService) {}
 
   ngOnInit() {
     this._configService.init(this.obj.moduleCode).subscribe(() => {
@@ -69,7 +70,7 @@ export class MonitoringListComponent implements OnInit {
     this.activetab = this.children0Array[0] && this.children0Array[0].objectType;
 
     this.objectListType = this.children0Array[0] && this.children0Array[0].objectType;
-
+    this._listService.listType = this.children0Array[0] && this.children0Array[0].objectType;
     // datatable
     this.childrenDataTable = this.obj.childrenColumnsAndRows('display_list');
 

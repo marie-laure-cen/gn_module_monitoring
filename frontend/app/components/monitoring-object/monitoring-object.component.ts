@@ -28,6 +28,7 @@ import { ObjectService } from '../../services/object.service';
 import { Utils } from '../../utils/utils';
 import { ConfigJsonService } from '../../services/config-json.service';
 import { GeoJSONService } from '../../services/geojson.service';
+import { ListService } from '../../services/list.service';
 
 @Component({
   selector: 'pnx-object',
@@ -69,7 +70,8 @@ export class MonitoringObjectComponent implements OnInit {
     private _auth: AuthService,
     private _commonService: CommonService,
     private _evtObjService: ObjectService,
-    private _geojsonService: GeoJSONService
+    private _geojsonService: GeoJSONService,
+    public listService: ListService
   ) {}
 
   ngAfterViewInit() {

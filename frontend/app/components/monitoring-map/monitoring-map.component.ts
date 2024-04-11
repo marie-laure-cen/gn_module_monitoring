@@ -12,6 +12,7 @@ import { MapService } from '@geonature_common/map/map.service';
 import { MapListService } from '@geonature_common/map-list/map-list.service';
 import { Utils } from '../../utils/utils';
 import * as L from 'leaflet';
+import { ListService } from '../../services/list.service';
 
 @Component({
   selector: 'pnx-monitoring-map',
@@ -27,7 +28,6 @@ export class MonitoringMapComponent implements OnInit {
 
   @Input() filters: {};
   @Input() pre_filters: {};
-  @Input() objectListType: string;
   @Input() heightMap;
 
   bListen = true;
@@ -78,10 +78,61 @@ export class MonitoringMapComponent implements OnInit {
     private _data: DataMonitoringObjectService,
     private _mapListService: MapListService,
     private _geojsonService: GeoJSONService,
-    private _popup: Popup
+    private _popup: Popup,
+    public listService : ListService
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+
+    // TODO gestion des interractions carte list
+
+    // if (Object.keys(changes).includes('selectedObject')) {
+    //   if (!this.selectedObject) {
+    //     return;
+    //   }
+    //   if (this.obj.objectType == 'module' && Object.keys(this.selectedObject).length > 0) {               
+    //     if (this.objectListType == 'sites_group') {
+    //       this._geojsonService.selectSitesGroupLayer(this.selectedObject['id'], true);
+    //     } else if (this.objectListType == 'site') {
+    //       this._geojsonService.selectSitesLayer(this.selectedObject['id'], true);
+    //     }
+    //   }
+    // }
+    // if (Object.keys(changes).includes('bEdit')) {
+    //   this.setSitesStyle(this.obj.objectType);
+    // }
+
+    // if (
+    //   Object.keys(changes).includes('filters') ||
+    //   Object.keys(changes).includes('pre_filters') ||
+    //   Object.keys(changes).includes('objectListType')
+    // ) {
+    //   // Filtres du tableau
+    //   // A appliquer que si on est au niveau du module pour les objets sites et groupes de sites
+    //   // Ou au niveau des groupes de sites pour les sites
+      
+    //   if (
+    //     Object.keys(changes).includes('filters') &&
+    //     (this.objectListType == 'sites_group' || this.objectListType == 'site')
+    //   ) {
+    //     this.refresh_geom_data();
+    //   } else if (
+    //     Object.keys(changes).includes('pre_filters') ||
+    //     Object.keys(changes).includes('objectListType')
+    //   ) {
+    //     console.log("RELOAD");
+                
+    //     this.refresh_geom_data();
+    //   }
+    // }
+
+    this.refresh_geom_data()
+
+    // On tab list tab change - reload geom data
+    this.listService.listType$.subscribe((value) => {      
+      this.refresh_geom_data();
+    })
+  }
 
   refresh_geom_data() {
     const params = {
@@ -99,7 +150,7 @@ export class MonitoringMapComponent implements OnInit {
       displayObject = this.obj.objectType;
     } else if (this.obj.objectType == 'module') {
       // Si module affichage du type d'objet courant
-      displayObject = this.objectListType;
+      displayObject = this.listService.listType;
     } else if (this.obj.objectType == 'sites_group') {
       // Si page détail d'un groupe de site affichage du groupe de site et de ces enfants
       displayObject = 'sites_group_with_child';
@@ -172,41 +223,8 @@ export class MonitoringMapComponent implements OnInit {
       return;
     }
 
-    if (Object.keys(changes).includes('selectedObject')) {
-      if (!this.selectedObject) {
-        return;
-      }
-      if (this.obj.objectType == 'module' && Object.keys(this.selectedObject).length > 0) {
-        if (this.objectListType == 'sites_group') {
-          this._geojsonService.selectSitesGroupLayer(this.selectedObject['id'], true);
-        } else if (this.objectListType == 'site') {
-          this._geojsonService.selectSitesLayer(this.selectedObject['id'], true);
-        }
-      }
-    }
-    if (Object.keys(changes).includes('bEdit')) {
-      this.setSitesStyle(this.obj.objectType);
-    }
 
-    if (
-      Object.keys(changes).includes('filters') ||
-      Object.keys(changes).includes('pre_filters') ||
-      Object.keys(changes).includes('objectListType')
-    ) {
-      // Filtres du tableau
-      // A appliquer que si on est au niveau du module pour les objets sites et groupes de sites
-      // Ou au niveau des groupes de sites pour les sites
-      if (
-        Object.keys(changes).includes('filters') &&
-        (this.objectListType == 'sites_group' || this.objectListType == 'site')
-      ) {
-        this.refresh_geom_data();
-      } else if (
-        Object.keys(changes).includes('pre_filters') ||
-        Object.keys(changes).includes('objectListType')
-      ) {
-        this.refresh_geom_data();
-      }
-    }
+
+
   }
 }
