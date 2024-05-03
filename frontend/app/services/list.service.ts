@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-
+ 
 @Injectable()
 export class ListService {
   /**
@@ -14,13 +14,28 @@ export class ListService {
   }
 
   public set listType(value: string | null) {
-    this.listType$.next(value)
+    this.listType$.next(value);
   }
 
+  public tableFilters$ = new BehaviorSubject<{} | null>(null);
 
-
-  constructor() {
-
+  public get tableFilters() {
+    return this.tableFilters$.getValue();
   }
 
+  public set tableFilters(value: {} | null) {
+    this.tableFilters$.next(value);
+  }
+
+  public preFilters$ = new BehaviorSubject<{} | null>(null);
+
+  public get preFilters() {
+    return this.preFilters$.getValue();
+  }
+
+  public set preFilters(value: {} | null) {
+    this.preFilters$.next(value);
+  }
+
+  constructor() {}
 }

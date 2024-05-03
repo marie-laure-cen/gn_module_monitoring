@@ -39,8 +39,6 @@ export class MonitoringObjectComponent implements OnInit {
   obj: MonitoringObject;
   module: MonitoringObject;
 
-  filters: Object = {};
-  pre_filters: Object = {};
   selectedObject: Object = undefined;
   objectListType: string;
 
@@ -71,7 +69,7 @@ export class MonitoringObjectComponent implements OnInit {
     private _commonService: CommonService,
     private _evtObjService: ObjectService,
     private _geojsonService: GeoJSONService,
-    public listService: ListService
+    public _listService: ListService
   ) {}
 
   ngAfterViewInit() {
@@ -166,24 +164,25 @@ export class MonitoringObjectComponent implements OnInit {
     // modules
     const queryParams = this._route.snapshot.queryParams || {};
 
-    this.pre_filters = {};
-    this.pre_filters['types_site'] =
+    let pre_filters = {};
+    pre_filters['types_site'] =
       this._configService.config()[this.obj.moduleCode]['module']['types_site'];
     // filtre objet géographique de référence
     if (this.obj.objectType == 'sites_group') {
-      this.pre_filters['id_sites_group'] = this.obj.id;
+      pre_filters['id_sites_group'] = this.obj.id;
     } else if (this.obj.objectType == 'site') {
-      this.pre_filters['id_base_site'] = this.obj.id;
+      pre_filters['id_base_site'] = this.obj.id;
     } else if (this.obj['siteId'] !== undefined) {
       // affichage du site parent
-      this.pre_filters['id_base_site'] = this.obj['siteId'];
+      pre_filters['id_base_site'] = this.obj['siteId'];
     } else if (queryParams['id_base_site'] !== undefined) {
       // récupération du site parent via l'url
-      this.pre_filters['id_base_site'] = queryParams['id_base_site'];
+      pre_filters['id_base_site'] = queryParams['id_base_site'];
     } else if (queryParams['siteId'] !== undefined) {
       // récupération du site parent via l'url
-      this.pre_filters['id_base_site'] = queryParams['siteId'];
+      pre_filters['id_base_site'] = queryParams['siteId'];
     }
+    this._listService.preFilters = pre_filters;
   }
 
   initRoutesParams() {

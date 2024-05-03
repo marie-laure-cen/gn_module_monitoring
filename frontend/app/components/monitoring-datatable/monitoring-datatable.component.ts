@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { MonitoringObjectService } from './../../services/monitoring-object.service';
+import { ListService } from '../../services/list.service';
 import { Subject } from 'rxjs';
 import { catchError, map, tap, take, debounceTime } from 'rxjs/operators';
 import { CommonService } from '@geonature_common/service/common.service';
@@ -62,7 +63,8 @@ export class MonitoringDatatableComponent implements OnInit {
   constructor(
     private _monitoring: MonitoringObjectService,
     private _commonService: CommonService,
-    private _objectService: ObjectService
+    private _objectService: ObjectService,
+    private _listService: ListService
   ) {}
 
   ngOnInit() {
@@ -122,7 +124,7 @@ export class MonitoringDatatableComponent implements OnInit {
     this.rowStatusChange.emit({});
     // Emmet les filtrers et le nombre de données répondant aux critères dans la liste
     this.onFilter.emit({ filters: this.filters, nb_row: temp.length });
-    // update the rows
+    this._listService.tableFilters = this.filters;
     this.rows = temp;
     // Whenever the filter changes, always go back to the first page
     this.table.offset = 0;

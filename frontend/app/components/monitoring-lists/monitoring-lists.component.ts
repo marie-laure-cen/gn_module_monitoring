@@ -20,10 +20,7 @@ export class MonitoringListComponent implements OnInit {
   @Output() bEditChange = new EventEmitter<boolean>();
 
   @Input() currentUser;
-  @Input() filters;
   @Output() filtersChange: EventEmitter<Object> = new EventEmitter<Object>();
-  @Input() objectListType: string;
-  @Output() objectListTypeChange: EventEmitter<string> = new EventEmitter<string>();
 
   @Input() selectedObject;
   @Output() selectedObjectChange: EventEmitter<string> = new EventEmitter<string>();
@@ -42,11 +39,12 @@ export class MonitoringListComponent implements OnInit {
   queyParamsNewObject = {};
 
   // medias;
-  @Output() objectsStatusChange: EventEmitter<Object> = new EventEmitter<Object>();
-
   canCreateChild: { [key: string]: boolean } = {};
   toolTipNotAllowed: string = TOOLTIPMESSAGEALERT;
-  constructor(private _configService: ConfigService, private _listService: ListService) {}
+  constructor(
+    private _configService: ConfigService,
+    private _listService: ListService
+  ) {}
 
   ngOnInit() {
     this._configService.init(this.obj.moduleCode).subscribe(() => {
@@ -67,10 +65,16 @@ export class MonitoringListComponent implements OnInit {
     this.backendUrl = this._configService.backendUrl();
 
     this.children0Array = this.obj.children0Array();
+
     this.activetab = this.children0Array[0] && this.children0Array[0].objectType;
 
-    this.objectListType = this.children0Array[0] && this.children0Array[0].objectType;
+    // this.objectListType = this.children0Array[0] && this.children0Array[0].objectType;
     this._listService.listType = this.children0Array[0] && this.children0Array[0].objectType;
+    if (this.children0Array.length == 0) {
+      // Si aucun tableau initialsation des filtres avec rien
+      this._listService.tableFilters = {};
+    }
+
     // datatable
     this.childrenDataTable = this.obj.childrenColumnsAndRows('display_list');
 
@@ -95,21 +99,14 @@ export class MonitoringListComponent implements OnInit {
   }
 
   onFilterChange(type, event) {
-    const filters = event['filters'];
     const nb_row = event['nb_row'];
-    if (event) {
-      this.filters = filters;
-      this.filtersChange.emit(Utils.copy(this.filters));
-      this.objectListTypeChange.emit(Utils.copy(this.objectListType));
-    }
     this.nbVisibleRows[type] = nb_row;
   }
 
   changeActiveTab(typeObject, tab) {
     this.activetab = this.children0Array[typeObject['index']];
     // Réinitialisation des données selectés
-    this.objectListType = this.children0Array[typeObject['index']]['objectType'];
-    this.objectListTypeChange.emit(this.objectListType);
+    this._listService.listType = this.children0Array[typeObject['index']]['objectType'];
   }
 
   onbEditChanged(event) {

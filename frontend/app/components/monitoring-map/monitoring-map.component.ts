@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter, SimpleChanges } from '@angular/core';
 
+import { merge } from 'rxjs';
 import { FormGroup } from '@angular/forms';
 import { MonitoringObject } from '../../class/monitoring-object';
 import { Layer, svg, Path } from 'leaflet';
@@ -26,8 +27,6 @@ export class MonitoringMapComponent implements OnInit {
   @Input() selectedObject: Object;
   @Input() objForm: FormGroup;
 
-  @Input() filters: {};
-  @Input() pre_filters: {};
   @Input() heightMap;
 
   bListen = true;
@@ -79,65 +78,40 @@ export class MonitoringMapComponent implements OnInit {
     private _mapListService: MapListService,
     private _geojsonService: GeoJSONService,
     private _popup: Popup,
-    public listService : ListService
+    public listService: ListService
   ) {}
 
   ngOnInit() {
-
-    // TODO gestion des interractions carte list
-
-    // if (Object.keys(changes).includes('selectedObject')) {
-    //   if (!this.selectedObject) {
-    //     return;
-    //   }
-    //   if (this.obj.objectType == 'module' && Object.keys(this.selectedObject).length > 0) {               
-    //     if (this.objectListType == 'sites_group') {
-    //       this._geojsonService.selectSitesGroupLayer(this.selectedObject['id'], true);
-    //     } else if (this.objectListType == 'site') {
-    //       this._geojsonService.selectSitesLayer(this.selectedObject['id'], true);
-    //     }
-    //   }
-    // }
-    // if (Object.keys(changes).includes('bEdit')) {
-    //   this.setSitesStyle(this.obj.objectType);
-    // }
-
-    // if (
-    //   Object.keys(changes).includes('filters') ||
-    //   Object.keys(changes).includes('pre_filters') ||
-    //   Object.keys(changes).includes('objectListType')
-    // ) {
-    //   // Filtres du tableau
-    //   // A appliquer que si on est au niveau du module pour les objets sites et groupes de sites
-    //   // Ou au niveau des groupes de sites pour les sites
-      
-    //   if (
-    //     Object.keys(changes).includes('filters') &&
-    //     (this.objectListType == 'sites_group' || this.objectListType == 'site')
-    //   ) {
-    //     this.refresh_geom_data();
-    //   } else if (
-    //     Object.keys(changes).includes('pre_filters') ||
-    //     Object.keys(changes).includes('objectListType')
-    //   ) {
-    //     console.log("RELOAD");
-                
-    //     this.refresh_geom_data();
-    //   }
-    // }
-
-    this.refresh_geom_data()
-
-    // On tab list tab change - reload geom data
-    this.listService.listType$.subscribe((value) => {      
-      this.refresh_geom_data();
-    })
+    // gestion des interractions carte list
+    merge(
+      this.listService.listType$,
+      this.listService.tableFilters$,
+      this.listService.preFilters$
+    ).subscribe((val) => {
+      if (
+        this.listService.listType$.getValue() !== null &&
+        this.listService.tableFilters$.getValue() !== null &&
+        this.listService.preFilters$.getValue() !== null
+      ) {
+        this.refresh_geom_data();
+      }
+    });
   }
 
   refresh_geom_data() {
+    // Les filtres des tableaux ne sont pris en compte que pour les site ou les groupes de site
+    // Problème la route est appelée sans raison TODO voir comment éviter ça
+    let filter = {};
+    if (
+      this.listService.listType$.getValue() === 'sites_group' ||
+      this.listService.listType$.getValue() === 'site'
+    ) {
+      filter = this.listService.tableFilters$.getValue();
+    }
+
     const params = {
-      ...this.pre_filters,
-      ...this.filters,
+      ...this.listService.preFilters$.getValue(),
+      ...filter,
     };
     this._geojsonService.removeAllLayers();
     let displayObject;
@@ -223,8 +197,20 @@ export class MonitoringMapComponent implements OnInit {
       return;
     }
 
-
-
-
+    if (Object.keys(changes).includes('selectedObject')) {
+      if (!this.selectedObject) {
+        return;
+      }
+      if (this.obj.objectType == 'module' && Object.keys(this.selectedObject).length > 0) {
+        if (this.listService.listType == 'sites_group') {
+          this._geojsonService.selectSitesGroupLayer(this.selectedObject['id'], true);
+        } else if (this.listService.listType == 'site') {
+          this._geojsonService.selectSitesLayer(this.selectedObject['id'], true);
+        }
+      }
+    }
+    if (Object.keys(changes).includes('bEdit')) {
+      this.setSitesStyle(this.obj.objectType);
+    }
   }
 }
