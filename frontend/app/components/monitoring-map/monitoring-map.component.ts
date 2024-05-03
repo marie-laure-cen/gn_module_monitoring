@@ -1,6 +1,8 @@
 import { Component, OnInit, Input, Output, EventEmitter, SimpleChanges } from '@angular/core';
 
 import { merge } from 'rxjs';
+import { filter } from 'rxjs/operators';
+
 import { FormGroup } from '@angular/forms';
 import { MonitoringObject } from '../../class/monitoring-object';
 import { Layer, svg, Path } from 'leaflet';
@@ -83,35 +85,38 @@ export class MonitoringMapComponent implements OnInit {
 
   ngOnInit() {
     // gestion des interractions carte list
+    const tableType = ['sites_group', 'site'];
+
     merge(
       this.listService.listType$,
-      this.listService.tableFilters$,
-      this.listService.preFilters$
+      this.listService.preFilters$,
+      this.listService.tableFilters$.pipe(
+        filter(
+          () =>
+            // Les filtres des tableaux ne sont pris en compte que pour les sites ou les groupes de site
+            tableType.indexOf(this.listService.listType$.getValue()) >= 0
+        )
+      )
     ).subscribe((val) => {
       if (
         this.listService.listType$.getValue() !== null &&
-        this.listService.tableFilters$.getValue() !== null &&
         this.listService.preFilters$.getValue() !== null
       ) {
-        this.refresh_geom_data();
+        if (
+          (this.listService.tableFilters$.getValue() === null &&
+            tableType.indexOf(this.listService.listType$.getValue()) < 0) ||
+          this.listService.tableFilters$.getValue() !== null
+        ) {
+          this.refresh_geom_data();
+        }
       }
     });
   }
 
   refresh_geom_data() {
-    // Les filtres des tableaux ne sont pris en compte que pour les site ou les groupes de site
-    // Problème la route est appelée sans raison TODO voir comment éviter ça
-    let filter = {};
-    if (
-      this.listService.listType$.getValue() === 'sites_group' ||
-      this.listService.listType$.getValue() === 'site'
-    ) {
-      filter = this.listService.tableFilters$.getValue();
-    }
-
     const params = {
       ...this.listService.preFilters$.getValue(),
-      ...filter,
+      ...this.listService.tableFilters$.getValue(),
     };
     this._geojsonService.removeAllLayers();
     let displayObject;

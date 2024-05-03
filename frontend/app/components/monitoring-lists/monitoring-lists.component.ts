@@ -47,9 +47,10 @@ export class MonitoringListComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this._configService.init(this.obj.moduleCode).subscribe(() => {
-      this.initDataTable();
-    });
+    // Permet d'éviter une double initialisation du composant
+    // this._configService.init(this.obj.moduleCode).subscribe(() => {
+    //   this.initDataTable();
+    // });
   }
 
   initDataTable() {
@@ -69,7 +70,7 @@ export class MonitoringListComponent implements OnInit {
     this.activetab = this.children0Array[0] && this.children0Array[0].objectType;
 
     // this.objectListType = this.children0Array[0] && this.children0Array[0].objectType;
-    this._listService.listType = this.children0Array[0] && this.children0Array[0].objectType;
+    this._listService.listType = this.children0Array[0] && this.children0Array[0].objectType; 
     if (this.children0Array.length == 0) {
       // Si aucun tableau initialsation des filtres avec rien
       this._listService.tableFilters = {};

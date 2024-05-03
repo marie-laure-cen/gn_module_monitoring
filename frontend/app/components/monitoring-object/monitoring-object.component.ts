@@ -40,7 +40,6 @@ export class MonitoringObjectComponent implements OnInit {
   module: MonitoringObject;
 
   selectedObject: Object = undefined;
-  objectListType: string;
 
   backendUrl: string;
   frontendModuleMonitoringUrl: string;
@@ -245,6 +244,10 @@ export class MonitoringObjectComponent implements OnInit {
   }
 
   initData(): Observable<any> {
+    // Réinitialisation des services
+    this._listService.listType = null;
+    this._listService.preFilters = null;
+    this._listService.tableFilters = null;
     return of(true).pipe(
       mergeMap(() => {
         return this.getModuleSet();
