@@ -14,6 +14,9 @@ export class ListService {
   }
 
   public set listType(value: string | null) {
+    if (this.arrayTableFilters$.getValue()) {
+      this.tableFilters = null;
+    }
     this.listType$.next(value);
   }
 
@@ -29,6 +32,20 @@ export class ListService {
 
   public set tableFilters(value: {} | null) {
     this.tableFilters$.next(value);
+  }
+
+  /**
+   * Observable that stores the defaults filters of all the tabs
+   * Null if no tab is selected.
+   */
+  public arrayTableFilters$ = new BehaviorSubject<any | null>(null);
+
+  public get arrayTableFilters() {
+    return this.arrayTableFilters$.getValue();
+  }
+
+  public set arrayTableFilters(value: any | null) {
+    this.arrayTableFilters$.next(value);
   }
 
   /**

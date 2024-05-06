@@ -182,6 +182,18 @@ export class MonitoringObjectComponent implements OnInit {
       pre_filters['id_base_site'] = queryParams['siteId'];
     }
     this._listService.preFilters = pre_filters;
+
+    // L'objet n'a aucun enfant initialisation du paramètre listType
+    if (Object.keys(this.obj.children || []).length == 0) {
+      this._listService.tableFilters = {};
+      if (this.obj.objectType == 'sites_group') {
+        this._listService.listType = 'sites_group';
+      } else {
+        this._listService.listType = 'site';
+      }
+    } else {
+      this._listService.listType = this.obj.children0Array()[0].objectType;
+    }
   }
 
   initRoutesParams() {
@@ -245,9 +257,11 @@ export class MonitoringObjectComponent implements OnInit {
 
   initData(): Observable<any> {
     // Réinitialisation des services
-    this._listService.listType = null;
     this._listService.preFilters = null;
+    this._listService.listType = null;
+    this._listService.arrayTableFilters = null;
     this._listService.tableFilters = null;
+
     return of(true).pipe(
       mergeMap(() => {
         return this.getModuleSet();

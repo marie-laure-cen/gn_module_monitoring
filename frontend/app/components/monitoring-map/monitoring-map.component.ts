@@ -1,7 +1,8 @@
 import { Component, OnInit, Input, Output, EventEmitter, SimpleChanges } from '@angular/core';
 
 import { merge } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, distinctUntilChanged } from 'rxjs/operators';
+import { isEqual } from 'lodash';
 
 import { FormGroup } from '@angular/forms';
 import { MonitoringObject } from '../../class/monitoring-object';
@@ -38,6 +39,8 @@ export class MonitoringMapComponent implements OnInit {
   selectedSiteId: Number;
   currentSiteId: Number;
   publicDisplaySitesGroup: boolean = false;
+
+  listObjectSubscription: any;
 
   // todo mettre en config
   styles = {
@@ -87,26 +90,29 @@ export class MonitoringMapComponent implements OnInit {
     // gestion des interractions carte list
     const tableType = ['sites_group', 'site'];
 
-    merge(
-      this.listService.listType$,
-      this.listService.preFilters$,
+    // Souscription aux sujets :
+    //   * type de l'onglet actif du datatable
+    //   * filtre des datatables
+    //   * préfiltres
+    this.listObjectSubscription = merge(
+      this.listService.listType$.pipe(filter(() => this.listService.listType$.getValue() != null)),
+      this.listService.preFilters$.pipe(
+        filter(() => this.listService.preFilters$.getValue() != null)
+      ),
       this.listService.tableFilters$.pipe(
-        filter(
-          () =>
-            // Les filtres des tableaux ne sont pris en compte que pour les sites ou les groupes de site
-            tableType.indexOf(this.listService.listType$.getValue()) >= 0
-        )
+        // Si le datatable n'est ni un site, ni un groupe de sites
+        //    on ne tient pas compte des filtres pour la route geométrie
+        filter(() => tableType.indexOf(this.listService.listType$.getValue()) >= 0),
+        distinctUntilChanged(isEqual)
       )
-    ).subscribe((val) => {
-      if (
-        this.listService.listType$.getValue() !== null &&
-        this.listService.preFilters$.getValue() !== null
-      ) {
-        if (
-          (this.listService.tableFilters$.getValue() === null &&
-            tableType.indexOf(this.listService.listType$.getValue()) < 0) ||
-          this.listService.tableFilters$.getValue() !== null
-        ) {
+    ).subscribe(() => {
+      const listType = this.listService.listType$.getValue();
+      const preFilters = this.listService.preFilters$.getValue();
+      const tableFilters = this.listService.tableFilters$.getValue();
+      // On attent l'initialisation des préfiltres et le type de datatable
+      if (listType !== null && preFilters !== null) {
+        // On attent l'initalisation des préfiltres pour les listes de types site et groupes de sites
+        if ((tableFilters === null && tableType.indexOf(listType) < 0) || tableFilters !== null) {
           this.refresh_geom_data();
         }
       }
@@ -217,5 +223,14 @@ export class MonitoringMapComponent implements OnInit {
     if (Object.keys(changes).includes('bEdit')) {
       this.setSitesStyle(this.obj.objectType);
     }
+  }
+
+  ngOnDestroy() {
+    // Réinitalisations des paramètres
+    this.listObjectSubscription.unsubscribe();
+    this.listService.preFilters = null;
+    this.listService.listType = null;
+    this.listService.arrayTableFilters = null;
+    this.listService.tableFilters = null;
   }
 }

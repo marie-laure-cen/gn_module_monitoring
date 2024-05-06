@@ -25,7 +25,6 @@ export class MonitoringListComponent implements OnInit {
   @Input() selectedObject;
   @Output() selectedObjectChange: EventEmitter<string> = new EventEmitter<string>();
 
-  activetab: string;
   nbVisibleRows: Record<string, number> = {};
   frontendModuleMonitoringUrl;
   backendUrl: string;
@@ -67,15 +66,6 @@ export class MonitoringListComponent implements OnInit {
 
     this.children0Array = this.obj.children0Array();
 
-    this.activetab = this.children0Array[0] && this.children0Array[0].objectType;
-
-    // this.objectListType = this.children0Array[0] && this.children0Array[0].objectType;
-    this._listService.listType = this.children0Array[0] && this.children0Array[0].objectType; 
-    if (this.children0Array.length == 0) {
-      // Si aucun tableau initialsation des filtres avec rien
-      this._listService.tableFilters = {};
-    }
-
     // datatable
     this.childrenDataTable = this.obj.childrenColumnsAndRows('display_list');
 
@@ -105,9 +95,11 @@ export class MonitoringListComponent implements OnInit {
   }
 
   changeActiveTab(typeObject, tab) {
-    this.activetab = this.children0Array[typeObject['index']];
+    const activetab = this.children0Array[typeObject['index']];
     // Réinitialisation des données selectés
-    this._listService.listType = this.children0Array[typeObject['index']]['objectType'];
+    this._listService.listType = activetab['objectType'];
+    this._listService.tableFilters =
+      this._listService.arrayTableFilters$.getValue()[activetab['objectType']];
   }
 
   onbEditChanged(event) {
